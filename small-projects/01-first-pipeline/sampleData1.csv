@@ -1,0 +1,11 @@
+id,name,age,city,salary
+1,Alice,30,New York,70000
+2,Bob,NA,Los Angeles,85000
+3,Charlie,35,Chicago,invalid
+4,David,40,New York,95000
+5,Eve,28,na,62000
+6,Frank,33,Houston,71000
+7,Grace,25,Chicago,58000
+8,Heidi,38,New York,105000
+9,Ivan,45,Seattle,120000
+10,Judy,22,San Francisco,52000
