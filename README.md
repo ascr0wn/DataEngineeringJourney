@@ -1,1 +1,17 @@
 This Repo Contains everything i did (or will do) relating to Data Engineering.
+
+
+## Postgres Docker Container Intructions
+docker run -it --rm\
+--name postgres17 \
+-e POSTGRES_USER="user" \
+-e POSTGRES_PASSWORD="pass" \ (compulsory!)
+-e POSTGRES_DB="my_db" \
+-v my_db:/var/lib/postgresql/data \
+-p 5432:5432 \
+postgres:17-trixie
+then open a new terminal and run this:
+uv run pgcli -h localhost -u user -p 5432 -d my_db
+now we are inside the database.
+
+

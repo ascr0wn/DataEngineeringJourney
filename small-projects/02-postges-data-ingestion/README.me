@@ -1,0 +1,37 @@
+# NYC Taxi Data Ingestion 🚖
+
+This project ingests the NYC Yellow Taxi trip records (January 2025) into a local PostgreSQL database using Python and Docker.
+
+**Source Data:** [NYC TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
+
+## Prerequisites
+* Docker Desktop
+* Python 3.x
+* `uv` (Python package manager)
+* `pgcli` (Postgres CLI client)
+
+## Setup & Running
+
+### 1. Start the Database (Docker)
+Run the Postgres 17 container. This command maps port 5432 and creates a persistent volume for the data.
+
+```bash
+docker run -it \
+    --name postgres17 \
+    -e POSTGRES_USER="user" \
+    -e POSTGRES_PASSWORD="pass" \
+    -e POSTGRES_DB="my_db" \
+    -v my_db:/var/lib/postgresql/data \
+    -p 5432:5432 \
+    postgres:17-trixie
+
+THEN
+open a new terminal and run this:
+
+### 2. Setup terminal
+uv run pgcli -h localhost -u user -p 5432 -d my_db
+now we are inside the database
+
+### 3. Run custom docker image with ingestion python script
+uv run python main.py
+
