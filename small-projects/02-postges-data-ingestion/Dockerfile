@@ -1,4 +1,4 @@
-FROM python:3.10-trixie
+FROM python:3.10-bookworm
 WORKDIR /app
 RUN pip install uv
 COPY pyproject.toml uv.lock ./

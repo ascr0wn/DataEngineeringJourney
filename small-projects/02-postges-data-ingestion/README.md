@@ -4,51 +4,190 @@ This project ingests the NYC Yellow Taxi trip records (January 2025) into a loca
 
 **Source Data:** [NYC TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
 
-make sure you are in a bash terminal (commands here will be in bash, that's why) and follow below commands:
+---
 
-### 0. Create a Network
+## Prerequisites
+
+* **Terminal:** Use a `bash` compatible terminal.
+* **Docker:** Installed and running.
+* **Tools:** `uv` is used for dependency management (inside containers).
+
+---
+
+## ⚡ Quick Start (The "Manual" Way)
+
+If you want to run each container individually to understand how they connect.
+
+### 1. Create a Docker network
 ```bash
-docker network create taxi-network
+docker network create taxi_net
 
-### 1. start a docker postgres container
+```
+
+### 2. Run PostgreSQL container
+
 ```bash
-docker run -it \
-    --name postgres17 \
-    -e POSTGRES_USER="user" \
-    -e POSTGRES_PASSWORD="pass" \
-    -e POSTGRES_DB="my_db" \
-    -v my_db:/var/lib/postgresql/data \
-    -p 5432:5432 \
-    postgres:17-trixie
+docker run -d \
+  --name postgres_con \
+  --network taxi_net \
+  -p 5432:5432 \
+  -e POSTGRES_USER="user" \
+  -e POSTGRES_PASSWORD="pass" \
+  -e POSTGRES_DB="taxi_data_db" \
+  -v postgres_data:/var/lib/postgresql/data \
+  postgres:17-bookworm
 
-(install uv before hand using pip install uv, and then 'uv venv' if not using the docker image method)
+```
 
-### 1.1 (optional) to interact with the database use pgcli
+### 3. Build the Ingestion Image
+
+*Make sure `Dockerfile`, `pyproject.toml`, `uv.lock`, and `main.py` are in the current folder.*
+
 ```bash
-uv run pgcli -h localhost -u user -p 5432 -d my_db
+docker build -t ingestion_script:1.0 .
 
-## Notes: if not building docker image and just copying main.py from github, make sure to install dependency uv then use uv to install further dependencies like: pandas, psycopg, time, sqlalchemy, tqdm, os, pyarrow, fsspec, click, requests, aiohttp. (command: uv sync --frozen)
+```
 
-### 1.2 (optional) build your own ingestion docker image (not available at any remote docker image repo. build it yourself for the sake of practice)
-docker build -t ingestion-script:1.0
+### 4. Run the Ingestion Container
 
-### 1.3 docker run -it ingestion-script:1.0
-here you are in /bin/bash in terminal, not python. you have to execute the main.py yourself.
-this is because since main.py expects arguments from the cli (click python library).
-format: docker run -it --rm \
-    --network taxi-network \
-    taxi-ingest:v1 \
-    python main.py \
+```bash
+docker run -it --rm \
+  --name ingestion_con \
+  --network taxi_net \
+  ingestion_script:1.0
 
-run uv run python main.py --help for more information.
+```
 
-format uv run main.py \
-    --pg-user user \
-    --pg-pass pass \
-    --pg-host postgres-db \
-    --pg-port 5432 \
-    --pg-db my_db \
-    --year 2025 \
-    --month 1 \
-    --batchsize 100000
-use the above format to be specific with your choice. the given values in the example are also the default values for the arguments.
+---
+
+## 🚀 The "Pro" Way (Docker Compose)
+
+Instead of running commands manually, use Compose to spin up Postgres, pgAdmin, and the Ingestion container all at once.
+
+### 1. Start everything
+
+```bash
+docker compose up -d --build
+
+```
+
+### 2. Enter the Ingestion Container
+
+```bash
+docker exec -it ingestion_con /bin/bash
+
+```
+
+### 3. Run the Script
+
+Inside the container, run the script. **Crucial:** Override the host to point to the postgres container name.
+
+```bash
+uv run python main.py --pg-host postgres_con
+
+```
+
+---
+
+## 🛠 CLI Arguments (Click)
+
+The script uses `click` for robust CLI argument parsing. You can override any default configuration.
+
+**View Help:**
+
+```bash
+uv run python main.py --help
+
+```
+
+**Full Custom Run Example:**
+
+```bash
+uv run python main.py \
+  --pg-user user \
+  --pg-pass pass \
+  --pg-host postgres_con \
+  --pg-port 5432 \
+  --pg-db taxi_data_db \
+  --year 2025 \
+  --month 1 \
+  --batchsize 100000
+
+```
+
+---
+
+## 📊 Visualizing Data (pgAdmin)
+
+If you used Docker Compose, pgAdmin is already running.
+
+1. **Open Browser:** Go to [http://localhost:8085](https://www.google.com/search?q=http://localhost:8085)
+2. **Login:**
+* **Email:** `user@user.com`
+* **Password:** `pass`
+
+
+3. **Connect to Server:**
+* Right-click **Servers** > **Register** > **Server**
+* **General:** Name it `Taxi Docker DB`
+* **Connection:**
+* **Host:** `postgres_con` (Internal container name)
+* **Username:** `user`
+* **Password:** `pass`
+
+
+* Click **Save**. Viola! 🎻
+
+
+
+---
+
+## 📝 Verification (SQL)
+
+You can verify the data ingestion using `pgcli` from your local machine.
+
+```bash
+# Connect to localhost (since port 5432 is mapped)
+uv run pgcli -h localhost -p 5432 -u user -d taxi_data_db
+
+```
+
+**Run a check:**
+
+```sql
+SELECT count(*) FROM yellow_taxi_data_2025_01;
+
+```
+
+---
+
+## ⚠️ Notes for Local Development
+
+If you are **not** using Docker and just want to run `main.py` on your laptop:
+
+1. **Install `uv**`:
+```bash
+pip install uv
+
+```
+
+
+2. **Sync Dependencies**:
+```bash
+uv sync --frozen
+
+```
+
+
+3. **Run Script**:
+```bash
+# Note: Default host is 'localhost', so this works out of the box locally
+uv run python main.py
+
+```
+
+
+
+```
+
+```

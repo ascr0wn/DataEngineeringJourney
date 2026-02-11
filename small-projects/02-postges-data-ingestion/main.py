@@ -11,7 +11,7 @@ import click
 @click.command()
 @click.option('--pg-user', default='user', help='PostgreSQL user')
 @click.option('--pg-pass', default='pass', help='PostgreSQL password')
-@click.option('--pg-db', default='my_db', help='PostgreSQL database name')
+@click.option('--pg-db', default='taxi_data_db', help='PostgreSQL database name')
 @click.option('--pg-host', default='localhost', help='PostgreSQL host')
 @click.option('--pg-port', default=5432, type=int, help='PostgreSQL port')
 @click.option('--year', default=2025, type=int, help='Year of the data')
@@ -21,7 +21,7 @@ import click
 def postgres_parquet_ingestion(pg_user, pg_pass, pg_db, pg_host, pg_port, year, month, batchsize):
     file_url = f"https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_{year}-{month:02d}.parquet"
     db_connection = f'postgresql+psycopg://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}' #establishing connection to the PostgreSQL database with Database URI (Uniform Resource Identifier)
-    table_name = f"yellow-taxi-data{month}_{year}"
+    table_name = f"yellow_taxi_data_{year}_{month:02d}"
     start_time = time.time()
     try:
         engine = create_engine(db_connection)
